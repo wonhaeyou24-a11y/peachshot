@@ -49,6 +49,7 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
+    flex-wrap:wrap;
     padding: calc(18px + env(safe-area-inset-top)) 28px 18px;
     border-bottom: 1px solid var(--line);
     background: rgba(11,31,51,0.85);
@@ -56,6 +57,15 @@
     position: sticky;
     top:0;
     z-index: 20;
+    gap: 12px;
+  }
+  /* 좁은 화면(휴대폰)에서는 브랜드 줄과 버튼 줄을 완전히 분리해 각각 전체 너비를
+     쓰게 한다. 이렇게 안 하면 버튼들이 브랜드 옆의 좁은 오른쪽 칸에서만 세로로
+     계속 줄바꿈되어 화면 절반이 비는 것처럼 보인다. */
+  @media (max-width: 760px){
+    .topbar{ flex-direction:column; align-items:stretch; }
+    .topbar .brand{ width:100%; }
+    .topbar .actions{ width:100%; justify-content:flex-end; }
   }
   .brand{
     display:flex;
@@ -63,14 +73,11 @@
     gap:12px;
   }
   .brand .mark{
-    font-family:'JetBrains Mono', monospace;
-    font-weight:700;
-    font-size: 13px;
-    color: var(--amber);
-    border: 1px solid var(--amber);
-    padding: 2px 7px;
-    border-radius: 3px;
-    letter-spacing: 0.08em;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display:block;
+    flex-shrink:0;
   }
   .brand h1{
     font-size: 18px;
@@ -482,6 +489,10 @@
     flex:1;
     overflow-y:auto;
     max-height: 640px;
+    overscroll-behavior: contain; /* 기록목록을 스크롤하다 끝에 닿아도 그 스크롤이
+      바깥 페이지 스크롤로 이어지지 않게 막는다 — "기록목록 움직이려는데 전체가
+      움직인다"는 문제의 원인이 이것이었다 */
+    -webkit-overflow-scrolling: touch;
   }
   /* STEP9: 이 프로젝트에서 내 역할이 Viewer면 body에 viewer-mode 클래스가 붙고,
      role-gated로 표시해둔 편집 버튼들이 숨겨진다. (실제 보안 경계는 Supabase RLS —
@@ -566,6 +577,9 @@
 
   .site-row{
     display:flex;
+    flex-wrap:wrap; /* 이게 없으면 .site-info가 .site-actions의 버튼들에 밀려 거의 0폭까지
+                       눌리고, 그 안의 한글이 음절 단위로 세로 줄바꿈된다 — 앱 전체에서
+                       반복되던 "세로글씨" 문제의 진짜 근본 원인이 여기였다 */
     justify-content:space-between;
     align-items:center;
     gap: 10px;
@@ -574,7 +588,7 @@
   }
   .site-row:last-child{ border-bottom:none; }
   .site-row.active{ background: rgba(242,169,59,0.06); }
-  .site-info{ min-width:0; flex:1; }
+  .site-info{ min-width:220px; flex:1 1 220px; }
   .site-name{ font-size:14px; font-weight:700; }
   .site-meta{
     font-family:'JetBrains Mono', monospace;
@@ -583,7 +597,7 @@
     margin-top:2px;
   }
   .site-actions{ display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
-  .site-actions button{ padding: 6px 9px; font-size:12px; }
+  .site-actions button{ padding: 6px 9px; font-size:12px; white-space:nowrap; }
   .site-actions .site-delete{ color: var(--danger); border-color: rgba(226,96,79,0.4); }
   .site-move-select{
     font-family: inherit;
@@ -743,8 +757,8 @@
     flex-direction:column;
     gap: 8px;
     margin-top: 12px;
-    max-height: 220px;
-    overflow-y:auto;
+    /* .preview-grid와 같은 이유로 여기서도 자체 스크롤을 없애고 .modal-body 하나만
+       스크롤하도록 함 — 이중 중첩 스크롤로 인한 모바일 터치 충돌을 예방한다 */
   }
   .capture-row{
     display:flex;
@@ -790,8 +804,10 @@
     display:flex;
     flex-direction:column;
     gap: 14px;
-    max-height: 460px;
-    overflow-y:auto;
+    /* 이전엔 여기 max-height+overflow-y:auto가 있어서 .modal-body와 이중으로
+       스크롤 영역이 겹쳤다. 모바일에서는 안쪽 스크롤이 끝에 닿아도 바깥 스크롤로
+       안 이어져서 "손상종류" 아래 내용(규모·원인·보수방안 등)에 손을 델 방법이
+       없었다 — .modal-body 하나만 스크롤하도록 단순화해서 해결한다. */
   }
   .photo-card{
     border: 1px solid var(--line);
@@ -1109,7 +1125,7 @@
 
 <div class="topbar">
   <div class="brand">
-    <span class="mark">PS</span>
+    <img class="mark" src="./icons/icon-192.png" alt="PeachShot">
     <div>
       <h1>PeachShot</h1>
       <div class="project-label" id="projectLabel" title="현재 프로젝트 · 눌러서 전환">프로젝트 불러오는 중…</div>
@@ -1298,6 +1314,7 @@
         <label>시설물 형식
           <select id="fmForm"><option value="">시설물 종류를 먼저 선택하세요</option></select>
         </label>
+        <div id="fmStandardDbHint" class="hint" style="display:none; margin-top:-6px;"></div>
         <label id="fmTypeOtherWrap" style="display:none;">종류 직접입력<input id="fmTypeOther" type="text"></label>
         <label>설명(간단히)<textarea id="fmDesc" rows="2" placeholder="시설물 위치·특징 등을 간단히 적어주세요" style="background:var(--panel-2);border:1px solid var(--line);border-radius:5px;color:var(--text);font-family:inherit;font-size:13px;padding:8px 9px;resize:vertical;"></textarea></label>
         <label>연장(m)<input id="fmLength" type="text" inputmode="decimal"></label>
@@ -1471,9 +1488,9 @@
             <span class="more-item-title">☁️ 클라우드 동기화</span>
             <span class="more-item-desc">Supabase 로그인 · 온라인일 때 자동 백업 · 조직 관리</span>
           </button>
-          <button class="more-item" id="btnReference">
+          <button class="more-item office-only" id="btnReference" style="display:none;">
             <span class="more-item-title">기준자료 · DB 버전</span>
-            <span class="more-item-desc">지침 원본 보관 및 기준 DB 버전 이력 관리</span>
+            <span class="more-item-desc">지침 원본 보관 및 기준 DB 버전 이력 관리 (사무실 전용 설정)</span>
           </button>
         </div>
       </div>
@@ -3992,13 +4009,38 @@
 
   function currentSiteObj(){ return sites.find(x=>x.id===currentSiteId); }
 
+  const fmStandardDbHint = document.getElementById('fmStandardDbHint');
+
+  // 6번 요청: 시설물 종류·형식 조합에 기준DB(손상종류·원인·보수방안 자동연결)가
+  // 실제로 연결돼있는지, 시설물을 설정하는 이 단계에서 바로 확인할 수 있게 한다.
+  // 예전엔 손상입력 화면에 들어가야만 "공식DB"/"일반참고" 태그로 알 수 있었다.
+  function updateFmStandardDbHint(){
+    const type = fmType.value;
+    const form = fmForm.value;
+    if(!type || !form){
+      fmStandardDbHint.style.display = 'none';
+      return;
+    }
+    const connected = !!(STANDARD_DB[type] && STANDARD_DB[type][form] && STANDARD_DB[type][form].length);
+    fmStandardDbHint.style.display = '';
+    if(connected){
+      fmStandardDbHint.textContent = '✅ 이 조합은 기준DB(공식)에 연결되어 있습니다 — 손상입력 시 손상종류·원인·보수방안이 자동으로 추천됩니다.';
+      fmStandardDbHint.style.color = '#7FD99B';
+    } else {
+      fmStandardDbHint.textContent = '⚠️ 이 조합에 연결된 기준DB가 없습니다 — 손상입력 시 일반 참고 목록만 사용됩니다(비공식).';
+      fmStandardDbHint.style.color = '#E8C55B';
+    }
+  }
+
   fmType.addEventListener('change', ()=>{
     const forms = FACILITY_FORMS[fmType.value] || [];
     fmForm.innerHTML = forms.length
       ? forms.map(f=>'<option value="'+f+'">'+f+'</option>').join('')
       : '<option value="">-</option>';
     fmTypeOtherWrap.style.display = fmType.value === '기타' ? 'flex' : 'none';
+    updateFmStandardDbHint();
   });
+  fmForm.addEventListener('change', updateFmStandardDbHint);
 
   let editingSiteId = null;
 
@@ -4022,6 +4064,7 @@
     fmType.value = site.facilityType || '';
     fmType.dispatchEvent(new Event('change'));
     fmForm.value = site.facilityForm || '';
+    updateFmStandardDbHint();
     fmTypeOther.value = site.facilityTypeOther || '';
     fmTypeOtherWrap.style.display = (site.facilityType === '기타') ? 'flex' : 'none';
     fmDesc.value = site.description || '';
