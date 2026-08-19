@@ -71,6 +71,13 @@
     display:flex;
     align-items:center;
     gap:12px;
+    justify-content:space-between; /* 더보기(⋯) 버튼이 이 행의 오른쪽 여유공간에 붙도록 */
+  }
+  .brand-title-group{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
   }
   .brand .mark{
     width: 34px;
@@ -596,7 +603,7 @@
     color: var(--muted);
     margin-top:2px;
   }
-  .site-actions{ display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+  .site-actions{ display:flex; gap:6px; flex-basis:100%; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
   .site-actions button{ padding: 6px 9px; font-size:12px; white-space:nowrap; }
   .site-actions .site-delete{ color: var(--danger); border-color: rgba(226,96,79,0.4); }
   .site-move-select{
@@ -1125,11 +1132,14 @@
 
 <div class="topbar">
   <div class="brand">
-    <img class="mark" src="./icons/icon-192.png" alt="PeachShot">
-    <div>
-      <h1>PeachShot</h1>
-      <div class="project-label" id="projectLabel" title="현재 프로젝트 · 눌러서 전환">프로젝트 불러오는 중…</div>
+    <div class="brand-title-group">
+      <img class="mark" src="./icons/icon-192.png" alt="PeachShot">
+      <div>
+        <h1>PeachShot</h1>
+        <div class="project-label" id="projectLabel" title="현재 프로젝트 · 눌러서 전환">프로젝트 불러오는 중…</div>
+      </div>
     </div>
+    <button class="ghost icon-btn" id="btnMore" title="내보내기 · 백업">⋯</button>
   </div>
   <div class="actions">
     <button class="ghost" id="btnWorkMode" title="사무실/현장 모드 전환 (데이터는 똑같이 공유됩니다)">📍 현장 모드</button>
@@ -1138,7 +1148,6 @@
     <button class="primary office-only" id="btnNewSite" title="새 시설물 추가" style="display:none;">＋ 시설물</button>
     <button class="ghost" id="btnSiteList" title="저장된 시설물 목록 보기">시설물 목록</button>
     <button class="ghost office-only" id="btnResetImage" title="현재 시설물의 이미지를 불러오거나 교체" style="display:none;">이미지</button>
-    <button class="ghost icon-btn" id="btnMore" title="내보내기 · 백업">⋯</button>
   </div>
   <input type="file" id="fileInput" accept="image/*">
   <input type="file" id="workFileInput" accept="application/json,.json">
@@ -1191,10 +1200,12 @@
 
   <div class="side">
     <div class="side-head">
-      <span>기록 목록</span>
+      <span style="display:flex; align-items:center; gap:6px;">기록 목록
+        <button class="ghost icon-btn" id="btnToggleLogFilter" title="검색 · 중요도 필터" style="padding:2px 7px; font-size:12px;">🔍</button>
+      </span>
       <span id="sideCount">0 / 0 촬영됨</span>
     </div>
-    <div class="log-filter">
+    <div class="log-filter" id="logFilterWrap" style="display:none;">
       <input type="text" id="logSearch" placeholder="지점번호·손상종류·비고 검색…">
       <div class="chip-row" id="urgencyFilter">
         <button class="chip active" data-urg="">전체</button>
@@ -1725,8 +1736,16 @@
   const log = document.getElementById('log');
   const logSearch = document.getElementById('logSearch');
   const urgencyFilter = document.getElementById('urgencyFilter');
+  const btnToggleLogFilter = document.getElementById('btnToggleLogFilter');
+  const logFilterWrap = document.getElementById('logFilterWrap');
   let logFilterText = '';
   let logFilterUrgency = '';
+
+  btnToggleLogFilter.addEventListener('click', ()=>{
+    const nowHidden = logFilterWrap.style.display === 'none';
+    logFilterWrap.style.display = nowHidden ? 'flex' : 'none';
+    if(nowHidden) logSearch.focus();
+  });
 
   logSearch.addEventListener('input', ()=>{
     logFilterText = logSearch.value.trim();
