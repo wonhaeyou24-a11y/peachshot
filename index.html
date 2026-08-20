@@ -735,6 +735,22 @@
     max-height: 380px;
     object-fit: contain;
   }
+  /* 촬영 화면은 다른 모달보다 훨씬 크게 — 카메라로 프레이밍할 때 작은 화면이라
+     불편하다는 피드백을 반영. 폭은 화면 거의 전체, 미리보기 높이 제한도 없앤다. */
+  #captureModal .modal{
+    max-width: 760px;
+    width: 96vw;
+    max-height: 97vh;
+  }
+  #captureModal video{
+    max-height: none;
+    height: 62vh;
+    object-fit: cover; /* 화면을 꽉 채워서 프레이밍하기 쉽게 — 실제 촬영본 해상도/내용에는 영향 없음 */
+  }
+  @media (max-width: 480px){
+    #captureModal video{ height: 56vh; }
+  }
+  #captureModal.modal-backdrop{ padding: 8px; }
   .rotate-hint{
     background: rgba(242,169,59,0.15);
     border: 1px solid var(--amber);
